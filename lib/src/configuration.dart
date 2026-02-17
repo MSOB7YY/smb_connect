@@ -113,6 +113,9 @@ abstract class Configuration {
   /// Process id to send, randomized if unset
   int get pid;
 
+  /// Optional port, defaults to [SmbConstants.DEFAULT_PORT].
+  int? get port;
+
   /// maximum count of concurrent commands to announce, default 10
   static const int maxMpxCount = SmbConstants.DEFAULT_MAX_MPX_COUNT;
 

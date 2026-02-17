@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:mutex/mutex.dart';
+
 import 'package:smb_connect/src/buffer_cache.dart';
 import 'package:smb_connect/src/configuration.dart';
 import 'package:smb_connect/src/connect/common/common_server_message_block.dart';
@@ -129,8 +130,8 @@ class SmbTransport {
         _updatePreauthHash(resp.responseBuffer!);
       }
       return true;
-    } catch (e) {
-      print(e);
+    } catch (e, st) {
+      print(e.toString() + st.toString());
       return false;
     }
   }
@@ -181,7 +182,7 @@ class SmbTransport {
       await _ssn139();
     } else {
       if (_port == 0) {
-        _port = SmbConstants.DEFAULT_PORT; // 445
+        _port = config.port ?? SmbConstants.DEFAULT_PORT; // 445
       }
       var socket = await Socket.connect(host, SmbConstants.DEFAULT_PORT,
           timeout: Duration(milliseconds: config.soTimeout));
@@ -638,7 +639,7 @@ class SmbTransport {
       response.reset();
       _negotiated?.setupRequest(request);
 
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 1; i++) {
         await doSend(request, params);
 
         if (params?.contains(RequestParam.RETAIN_PAYLOAD) == true) {
@@ -655,7 +656,7 @@ class SmbTransport {
           if (config.debugPrint) {
             print("SmbTransport sent TimeoutException $i");
           }
-        }
+        } catch (_) {}
       }
       throw SmbException("SmbTransport cant send request: $request");
     } finally {
@@ -712,9 +713,8 @@ class SmbTransport {
     int key,
     CommonServerMessageBlockResponse response,
   ) async {
-    Completer<CommonServerMessageBlockResponse> completer = Completer();
-    responses[key] = (response: response, completer: completer);
-    return completer.future.timeout(waitResponseTimeout);
+   final v=  responses[key] ??= (response: response, completer: Completer());
+    return v.completer.future.timeout(waitResponseTimeout);
   }
 
   @protected

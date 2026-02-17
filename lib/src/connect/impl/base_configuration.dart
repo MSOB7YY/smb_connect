@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:smb_connect/src/buffer_cache.dart';
 import 'package:smb_connect/src/configuration.dart';
+import 'package:smb_connect/src/connect/impl/smb1/smb_com_constants.dart';
 import 'package:smb_connect/src/connect/smb_transport.dart';
 import 'package:smb_connect/src/credentials.dart';
 import 'package:smb_connect/src/dialect_version.dart';
-import 'package:smb_connect/src/connect/impl/smb1/smb_com_constants.dart';
 import 'package:smb_connect/src/smb_constants.dart';
 import 'package:smb_connect/src/utils/base.dart';
 import 'package:smb_connect/src/utils/encoding.dart';
@@ -74,6 +74,8 @@ class BaseConfiguration implements Configuration {
   @override
   final int pid;
   @override
+  final int? port;
+  @override
   final Uint8List machineId;
   @override
   final int listSize;
@@ -107,7 +109,7 @@ class BaseConfiguration implements Configuration {
     this.listCount = 200,
     this.maximumBufferSize = 0x10000,
     this.transactionBufferSize = 0xFFFF - 512,
-    this.bufferCacheSize = 16,
+    this.bufferCacheSize = 0x1FFF,
     this.sendBufferSize = SmbConstants.DEFAULT_SND_BUF_SIZE,
     this.receiveBufferSize = SmbConstants.DEFAULT_RCV_BUF_SIZE,
     this.responseTimeout = SmbConstants.DEFAULT_RESPONSE_TIMEOUT,
@@ -115,6 +117,7 @@ class BaseConfiguration implements Configuration {
     this.connTimeout = SmbConstants.DEFAULT_CONN_TIMEOUT,
     this.capabilities = 0,
     this.flags2 = 0,
+    this.port,
     int? pid,
     Uint8List? machineId,
     CharEncoding? oemEncoding,
@@ -133,9 +136,7 @@ class BaseConfiguration implements Configuration {
     if (flags2 == 0) {
       flags2 = SmbConstants.FLAGS2_LONG_FILENAMES |
           SmbConstants.FLAGS2_EXTENDED_ATTRIBUTES |
-          (isUseExtendedSecurity
-              ? SmbConstants.FLAGS2_EXTENDED_SECURITY_NEGOTIATION
-              : 0) |
+          (isUseExtendedSecurity ? SmbConstants.FLAGS2_EXTENDED_SECURITY_NEGOTIATION : 0) |
           // (signingPreferred ? SmbConstants.FLAGS2_SECURITY_SIGNATURES : 0) |
           (isUseNtStatus ? SmbConstants.FLAGS2_STATUS32 : 0) |
           (isUseUnicode ? SmbConstants.FLAGS2_UNICODE : 0); // || forceUnicode

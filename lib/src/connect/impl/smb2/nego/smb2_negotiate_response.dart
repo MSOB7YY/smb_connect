@@ -1,14 +1,14 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:smb_connect/src/exceptions.dart';
 import 'package:smb_connect/src/configuration.dart';
-import 'package:smb_connect/src/dialect_version.dart';
 import 'package:smb_connect/src/connect/common/common_server_message_block.dart';
 import 'package:smb_connect/src/connect/impl/smb2/server_message_block2_response.dart';
 import 'package:smb_connect/src/connect/impl/smb2/smb2_constants.dart';
 import 'package:smb_connect/src/connect/smb_util.dart';
 import 'package:smb_connect/src/connect/transport/response.dart';
+import 'package:smb_connect/src/dialect_version.dart';
+import 'package:smb_connect/src/exceptions.dart';
 import 'package:smb_connect/src/utils/base.dart';
 import 'package:smb_connect/src/utils/extensions.dart';
 import 'package:smb_connect/src/utils/strings.dart';
@@ -17,6 +17,7 @@ import '../../../common/smb_negotiation_request.dart';
 import '../../../common/smb_negotiation_response.dart';
 import '../io/smb2_read_response.dart';
 import '../io/smb2_write_request.dart';
+
 import 'encryption_negotiate_context.dart';
 import 'negotiate_context_request.dart';
 import 'negotiate_context_response.dart';
@@ -350,7 +351,7 @@ class Smb2NegotiateResponse extends ServerMessageBlock2Response
         negotiateContextCount != 0) {
       int ncpos = getHeaderStart() + negotiateContextOffset;
       List<NegotiateContextResponse?> contexts =
-          List.generate(length, (index) => null);
+        List.generate(negotiateContextCount, (_) => null);
       for (int i = 0; i < negotiateContextCount; i++) {
         int type = SMBUtil.readInt2(buffer, ncpos);
         int dataLen = SMBUtil.readInt2(buffer, ncpos + 2);

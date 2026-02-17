@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:pointycastle/asn1/primitives/asn1_object_identifier.dart';
-import 'package:smb_connect/src/exceptions.dart';
+
 import 'package:smb_connect/src/configuration.dart';
 import 'package:smb_connect/src/credentials.dart';
 import 'package:smb_connect/src/crypto/crypto.dart';
+import 'package:smb_connect/src/exceptions.dart';
 import 'package:smb_connect/src/smb/authentication_type.dart';
 import 'package:smb_connect/src/smb/spnego_context.dart';
 import 'package:smb_connect/src/utils/base.dart';
@@ -13,6 +14,7 @@ import 'package:smb_connect/src/utils/extensions.dart';
 import 'package:smb_connect/src/utils/strings.dart';
 
 import '../spnego/neg_token_init.dart';
+
 import 'ntlm_context.dart';
 import 'ntlm_util.dart';
 import 'ssp_context.dart';
@@ -167,7 +169,7 @@ class NtlmPasswordAuthenticator implements Credentials {
   String toString() => getName();
 
   @override
-  bool isAnonymous() => type == AuthenticationType.ANONYMOUS;
+  bool isAnonymous() => type == AuthenticationType.ANONYMOUS || (username.isEmpty && password.isEmpty);
 
   @override
   bool isGuest() => type == AuthenticationType.GUEST;

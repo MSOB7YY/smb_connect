@@ -12,6 +12,11 @@ typedef SmbMalformedDataException = Exception;
 
 class SmbAuthException extends SmbException {
   SmbAuthException(super.message);
+
+  @override
+  String toString() {
+    return 'SmbAuthException($message)';
+  }
 }
 
 typedef SmbIllegalArgumentException = Exception;
@@ -22,6 +27,11 @@ typedef DcerpcException = Exception;
 class SmbConnectException extends Error {
   String message;
   SmbConnectException(this.message, [Object? e]);
+
+  @override
+  String toString() {
+    return 'SmbConnectException($message)';
+  }
 }
 
 class NbtException extends SmbConnectException {
@@ -50,8 +60,7 @@ class NbtException extends SmbConnectException {
   int errorClass;
   int errorCode;
 
-  NbtException(this.errorClass, this.errorCode)
-      : super(getErrorString(errorClass, errorCode));
+  NbtException(this.errorClass, this.errorCode) : super(getErrorString(errorClass, errorCode));
 
   static String getErrorString(int errorClass, int errorCode) {
     String result = "";
@@ -97,6 +106,11 @@ class NbtException extends SmbConnectException {
         result += "unknown error class: $errorClass";
     }
     return result;
+  }
+
+  @override
+  String toString() {
+    return 'NbtException($message)';
   }
 }
 
@@ -144,14 +158,11 @@ class SmbException extends Error {
   // to replace a bunch of one-off binary searches
   static final Map<int, String> _errorCodeMessages = _buildErrorCodeMessages();
   // ignore: unused_field
-  static final Map<int, String> _winErrorCodeMessages =
-      _buildWinErrorCodeMessages();
-  static final Map<int, int> _dosErrorCodeStatuses =
-      _buildDosErrorCodeMessages();
+  static final Map<int, String> _winErrorCodeMessages = _buildWinErrorCodeMessages();
+  static final Map<int, int> _dosErrorCodeStatuses = _buildDosErrorCodeMessages();
 
   static String getMessageByCode(int errcode) {
-    return _errorCodeMessages[errcode] ??
-        "0x${Hexdump.toHexString(errcode, 8)}";
+    return _errorCodeMessages[errcode] ?? "0x${Hexdump.toHexString(errcode, 8)}";
   }
 
   static int getStatusByCode(int errcode) {
@@ -159,8 +170,7 @@ class SmbException extends Error {
     if ((errcode & 0xC0000000) != 0) {
       statusCode = errcode;
     } else {
-      statusCode =
-          _dosErrorCodeStatuses[errcode] ?? NtStatus.NT_STATUS_UNSUCCESSFUL;
+      statusCode = _dosErrorCodeStatuses[errcode] ?? NtStatus.NT_STATUS_UNSUCCESSFUL;
     }
     return statusCode;
   }
@@ -168,6 +178,10 @@ class SmbException extends Error {
   String message;
   SmbException(this.message, [Object? e]);
 
-  SmbException.code(int code, String? message)
-      : this(message ?? "Error code: $code");
+  SmbException.code(int code, String? message) : this(message ?? "Error code: $code");
+
+  @override
+  String toString() {
+    return 'SmbException($message)';
+  }
 }

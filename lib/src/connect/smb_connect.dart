@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:smb_connect/src/connect/impl/base_configuration.dart';
 import 'package:smb_connect/src/configuration.dart';
 import 'package:smb_connect/src/connect/impl/smb1/smb1_connect.dart';
 import 'package:smb_connect/src/connect/impl/smb2/smb2_connect.dart';
@@ -11,7 +10,6 @@ import 'package:smb_connect/src/connect/smb_session.dart';
 import 'package:smb_connect/src/connect/smb_transport.dart';
 import 'package:smb_connect/src/connect/smb_tree.dart';
 import 'package:smb_connect/src/credentials.dart';
-import 'package:smb_connect/src/dialect_version.dart';
 import 'package:smb_connect/src/smb/authentication_type.dart';
 import 'package:smb_connect/src/smb/file_entry.dart';
 import 'package:smb_connect/src/smb/nt_status.dart';
@@ -22,9 +20,15 @@ import 'package:smb_connect/src/utils/strings.dart';
 
 enum ForceProtocol { auto, smb1, smb2 }
 
+typedef SMBConfigurationBuilder = Configuration Function(
+  Credentials creds,
+  String username,
+  String password,
+  String domain,
+);
+
 abstract class SmbConnect {
-  static Credentials _buildCredentials(
-      String? username, String? password, String? domain) {
+  static Credentials _buildCredentials(String? username, String? password, String? domain) {
     if (username != null && password != null && domain != null) {
       return NtlmPasswordAuthenticator(
         type: AuthenticationType.USER,
@@ -42,15 +46,10 @@ abstract class SmbConnect {
     required String username,
     required String password,
     required String domain,
+    required SMBConfigurationBuilder configBuilder,
   }) async {
-    final config = BaseConfiguration(
-      credentials: _buildCredentials(username, password, domain),
-      username: username,
-      password: password,
-      domain: domain,
-      bufferCacheSize: 0x1FFF,
-      // debugPrint: debugPrint,
-    );
+    final creds = _buildCredentials(username, password, domain);
+    final config = configBuilder(creds, username, password, domain);
     SmbTransport transport = SmbTransport(config, host);
     try {
       return await transport.ensureConnected();
@@ -91,27 +90,16 @@ abstract class SmbConnect {
     required String username,
     required String password,
     required String domain,
-    bool debugPrint = false,
-    bool debugPrintLowLevel = false,
-    bool forceSmb1 = false,
+    required SMBConfigurationBuilder configBuilder,
     Function(SmbConnect)? onDisconnect,
   }) async {
     final creds = _buildCredentials(username, password, domain);
+    final config = configBuilder(creds, username, password, domain);
     return await connect(
-        BaseConfiguration(
-          credentials: creds,
-          username: username,
-          password: password,
-          domain: domain,
-          bufferCacheSize: 0x1FFF,
-          debugPrint: debugPrint,
-          debugPrintLowLevel: debugPrintLowLevel,
-          forceSmb1: forceSmb1,
-          maximumVersion:
-              forceSmb1 ? DialectVersion.SMB1 : DialectVersion.SMB210,
-        ),
-        host,
-        onDisconnect: onDisconnect);
+      config,
+      host,
+      onDisconnect: onDisconnect,
+    );
   }
 
   final Configuration configuration;
@@ -165,8 +153,7 @@ abstract class SmbConnect {
   // Future<SmbFile> copyTo(SmbFile srcFile, String dstPath,
   //     {bool replace = false});
 
-  Future<SmbFile> rename(SmbFile srcFile, String dstPath,
-      {bool replace = false});
+  Future<SmbFile> rename(SmbFile srcFile, String dstPath, {bool replace = false});
 
   Future<Stream<Uint8List>> openRead(SmbFile file, [int? start, int? end]);
 
@@ -185,15 +172,16 @@ abstract class SmbConnect {
         return null;
       }
       return SmbFile(
-          folder.path.addToken('/', name, ignoreDivIfSame: true),
-          folder.uncPath.addToken("\\", name, ignoreDivIfSame: true),
-          folder.share,
-          e.createTime(),
-          e.lastModified(),
-          e.lastAccess(),
-          e.getAttributes(),
-          e.length(),
-          true);
+        folder.path.addToken('/', name, ignoreDivIfSame: true),
+        folder.uncPath.addToken("\\", name, ignoreDivIfSame: true),
+        folder.share,
+        e.createTime(),
+        e.lastModified(),
+        e.lastAccess(),
+        e.getAttributes(),
+        e.length(),
+        true,
+      );
     });
   }
 
